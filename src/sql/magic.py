@@ -19,6 +19,15 @@ import sql.parse
 import sql.run
 
 
+def _replace_pattern(s, kw, pattern=re.compile(r'\$(\w+)')):
+    """
+    Replace delimited keys in a string with values from kw.
+
+    Any pattern may be used, as long as the first group defines the lookup key.
+    """
+    lookup = lambda match: kw.get(match.group(1), match.group())
+    return pattern.sub(lookup, s)
+
 @magics_class
 class SqlMagic(Magics, Configurable):
     """Runs SQL statement on a database, specified by SQLAlchemy connect string.
@@ -78,6 +87,7 @@ class SqlMagic(Magics, Configurable):
         user_ns.update(local_ns)
 
         parsed = sql.parse.parse('%s\n%s' % (line, cell), self)
+        parsed['sql'] = _replace_pattern(parsed['sql'], self.shell.user_ns)
         flags = parsed['flags']
         conn = sql.connection.Connection.get(parsed['connection'])
 
