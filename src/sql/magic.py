@@ -28,6 +28,18 @@ def _replace_pattern(s, kw, pattern=re.compile(r'\$(\w+)')):
     lookup = lambda match: kw.get(match.group(1), match.group())
     return pattern.sub(lookup, s)
 
+def _resolve_bash(bash, source):
+    """
+    Replace the variables ${variable} with the bash command, contained in the braces.
+    :param bash: bash shell object
+    :param source: string of the
+    :return: source where all ${variable} strings are resolved
+    """
+
+    pattern = re.compile(r'\$\{(\w+)\}')
+    lookup = lambda match: kw.get(match.group(1), match.group())
+    return pattern.sub(lookup, source)
+
 @magics_class
 class SqlMagic(Magics, Configurable):
     """Runs SQL statement on a database, specified by SQLAlchemy connect string.
@@ -84,6 +96,8 @@ class SqlMagic(Magics, Configurable):
         """
         # save globals and locals so they can be referenced in bind vars
         user_ns = self.shell.user_ns.copy()
+        print(type(self.shell))
+        print((self.shell))
         user_ns.update(local_ns)
 
         parsed = sql.parse.parse('%s\n%s' % (line, cell), self)
