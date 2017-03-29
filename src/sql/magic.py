@@ -37,7 +37,7 @@ def _replace_pattern_with_bash(source, pattern=re.compile(r'\$\{(\w+)\}')):
 
     Any pattern may be used, as long as the first group defines the lookup key.
     """
-    lookup = lambda match: subprocess.Popen("echo %s " % match.group(1), stdout=subprocess.PIPE).stdout.read()
+    lookup = lambda match: subprocess.Popen("echo $%s " % match.group(1), stdout=subprocess.PIPE).stdout.read()
 
     return pattern.sub(lookup, source)
 
