@@ -62,6 +62,8 @@ class SqlMagic(Magics, Configurable):
                            "a sqlalchemy connection string is formed from the "
                            "matching section in the DSN file.")
     autocommit = Bool(True, config=True, help="Set autocommit mode")
+    raise_exceptions = Bool(False, config=True, help="Define if exceptions should be thrown or just be printed "
+                                                     "(default to False: just be printed)")
 
     def __init__(self, shell):
         Configurable.__init__(self, config=shell.config)
@@ -109,8 +111,11 @@ class SqlMagic(Magics, Configurable):
         try:
             conn = sql.connection.Connection.set(parsed['connection'])
         except Exception as e:
-            print(e)
-            print(sql.connection.Connection.tell_format())
+            if not self.raise_exceptions:
+                print(e)
+                print(sql.connection.Connection.tell_format())
+            else:
+                raise e
             return None
 
         if flags.get('persist'):
