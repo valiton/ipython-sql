@@ -180,9 +180,6 @@ only the screen display is truncated.
     In [2]: %config SqlMagic
     SqlMagic options
     --------------
-    SqlMagic.raise_exceptions=<Bool>
-        Current: False
-        Define if exceptions should be thrown or just be printed
     SqlMagic.autocommit=<Bool>
         Current: True
         Set autocommit mode
