@@ -1,6 +1,6 @@
 import re
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, needs_local_scope
-
+from IPython.display import display_javascript
 try:
     from traitlets.config.configurable import Configurable
     from traitlets import Bool, Int, Unicode
@@ -58,9 +58,10 @@ class SqlMagic(Magics, Configurable):
     column_local_vars = Bool(False, config=True, help="Return data into local variables from column names")
     feedback = Bool(True, config=True, help="Print number of rows affected by DML")
     dsn_filename = Unicode('odbc.ini', config=True, help="Path to DSN file. "
-                                                         "When the first argument is of the form [section], "
-                                                         "a sqlalchemy connection string is formed from the "
-                                                         "matching section in the DSN file.")
+                           "When the first argument is of the form [section], "
+                           "a sqlalchemy connection string is formed from the "
+                           "matching section in the DSN file.")
+    autocommit = Bool(True, config=True, help="Set autocommit mode")
 
     def __init__(self, shell):
         Configurable.__init__(self, config=shell.config)
@@ -105,9 +106,14 @@ class SqlMagic(Magics, Configurable):
         parsed['sql'] = _replace_pattern_with_ns(parsed['sql'], self.shell.user_ns)
         parsed['sql'] = _replace_pattern_with_bash(parsed['sql'])
         flags = parsed['flags']
-        conn = sql.connection.Connection.get(parsed['connection'])
+        try:
+            conn = sql.connection.Connection.set(parsed['connection'])
+        except Exception as e:
+            print(e)
+            print(sql.connection.Connection.tell_format())
+            return None
 
-        if flags['persist']:
+        if flags.get('persist'):
             return self._persist_dataframe(parsed['sql'], conn, user_ns)
 
         try:
@@ -132,7 +138,7 @@ class SqlMagic(Magics, Configurable):
                 return None
             else:
 
-                if flags['result_var']:
+                if flags.get('result_var'):
                     result_var = flags['result_var']
                     print("Returning data to local variable {}".format(result_var))
                     self.shell.user_ns.update({result_var: result})
@@ -174,4 +180,6 @@ class SqlMagic(Magics, Configurable):
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
+    js = "IPython.CodeCell.config_defaults.highlight_modes['magic_sql'] = {'reg':[/^%%sql/]};"
+    display_javascript(js, raw=True)
     ip.register_magics(SqlMagic)
